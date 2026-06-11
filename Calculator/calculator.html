@@ -1,1 +1,214 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSC 426 Calculator</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background: linear-gradient(135deg, #eafff3, #ffffff);
+}
+
+/* CARD */
+.calculator{
+    width:360px;
+    padding:25px;
+    border-radius:20px;
+    background: #ffffff;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    border: 1px solid rgba(0, 200, 100, 0.15);
+    backdrop-filter: blur(10px);
+}
+
+/* TITLE */
+.calculator h2{
+    text-align:center;
+    margin-bottom:15px;
+    font-size:22px;
+    background: linear-gradient(90deg, #00c853, #64dd17);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* DISPLAY */
+#display{
+    width:100%;
+    height:65px;
+    border-radius:12px;
+    border: 2px solid rgba(0, 200, 100, 0.2);
+    text-align:right;
+    padding:12px;
+    font-size:26px;
+    outline:none;
+    background: linear-gradient(180deg, #ffffff, #f6fff9);
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.05);
+    margin-bottom:18px;
+}
+
+/* BUTTON GRID */
+.buttons{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+}
+
+/* BASE BUTTON */
+button{
+    height:60px;
+    border:none;
+    border-radius:14px;
+    font-size:20px;
+    cursor:pointer;
+    transition: 0.25s ease;
+    background: linear-gradient(145deg, #f1f1f1, #ffffff);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+button:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.12);
+}
+
+/* NUMBER BUTTONS */
+button:not(.operator):not(.clear):not(.equal){
+    color:#222;
+}
+
+/* OPERATORS */
+.operator{
+    background: linear-gradient(135deg, #00c853, #64dd17);
+    color:white;
+    font-weight:bold;
+}
+
+.operator:hover{
+    filter: brightness(1.05);
+}
+
+/* CLEAR */
+.clear{
+    background: linear-gradient(135deg, #ff5252, #d50000);
+    color:white;
+    font-weight:bold;
+}
+
+/* EQUAL */
+.equal{
+    grid-column: span 2;
+    background: linear-gradient(135deg, #00b09b, #96c93d);
+    color:white;
+    font-weight:bold;
+}
+
+/* FOOTER */
+.footer{
+    text-align:center;
+    margin-top:15px;
+    font-size:12px;
+    color:#666;
+}
+</style>
+</head>
+
+<body>
+
+<div class="calculator">
+    <h2>Calculator</h2>
+
+    <input type="text" id="display" readonly>
+
+    <div class="buttons">
+
+        <button class="clear" onclick="clearDisplay()">C</button>
+        <button class="operator" onclick="appendValue('%')">%</button>
+        <button class="operator" onclick="appendValue('^')">^</button>
+        <button class="operator" onclick="appendValue('/')">/</button>
+
+        <button onclick="appendValue('7')">7</button>
+        <button onclick="appendValue('8')">8</button>
+        <button onclick="appendValue('9')">9</button>
+        <button class="operator" onclick="appendValue('*')">*</button>
+
+        <button onclick="appendValue('4')">4</button>
+        <button onclick="appendValue('5')">5</button>
+        <button onclick="appendValue('6')">6</button>
+        <button class="operator" onclick="appendValue('-')">-</button>
+
+        <button onclick="appendValue('1')">1</button>
+        <button onclick="appendValue('2')">2</button>
+        <button onclick="appendValue('3')">3</button>
+        <button class="operator" onclick="appendValue('+')">+</button>
+
+        <button onclick="appendValue('0')">0</button>
+        <button onclick="appendValue('.')">.</button>
+        <button class="equal" onclick="calculate()">=</button>
+
+    </div>
+
+    <div class="footer">
+        HTML • CSS • JavaScript | CSC 426 Assignment
+    </div>
+</div>
+
+<script>
+const display = document.getElementById("display");
+
+function appendValue(value){
+    display.value += value;
+}
+
+function clearDisplay(){
+    display.value = "";
+}
+
+function calculate(){
+    try{
+        let expression = display.value;
+        expression = expression.replace(/\^/g, "**");
+        display.value = eval(expression);
+    } catch(error){
+        display.value = "Error";
+    }
+}
+
+// Keyboard support
+document.addEventListener("keydown", function(event){
+    const key = event.key;
+
+    if(!isNaN(key) || ['+','-','*','/','%','.'].includes(key)){
+        appendValue(key);
+    }
+
+    if(key === '^'){
+        appendValue('^');
+    }
+
+    if(key === 'Enter'){
+        calculate();
+    }
+
+    if(key === 'Backspace'){
+        display.value = display.value.slice(0,-1);
+    }
+
+    if(key === 'Escape'){
+        clearDisplay();
+    }
+});
+</script>
+
+</body>
+</html>
