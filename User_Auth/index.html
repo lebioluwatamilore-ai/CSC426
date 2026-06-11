@@ -1,1 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSC426 Portal</title>
 
+<style>
+:root{
+  --green1:#16a34a;
+  --green2:#22c55e;
+  --bg1:#f0fdf4;
+  --text:#111827;
+  --muted:#6b7280;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: radial-gradient(circle at top, #dcfce7, #f0fdf4);
+  padding:20px;
+}
+
+/* CARD */
+.card{
+  width:100%;
+  max-width:420px;
+  background:#fff;
+  border-radius:18px;
+  padding:35px;
+  box-shadow:0 20px 50px rgba(0,0,0,0.08);
+  position:relative;
+  overflow:hidden;
+}
+
+.card::before{
+  content:"";
+  position:absolute;
+  width:160px;
+  height:160px;
+  background:linear-gradient(135deg,var(--green1),var(--green2));
+  border-radius:50%;
+  top:-70px;
+  right:-70px;
+  opacity:0.2;
+}
+
+/* HEADER */
+h1{
+  font-size:26px;
+  color:var(--text);
+  margin-bottom:5px;
+}
+
+small{
+  color:var(--muted);
+  display:block;
+  margin-bottom:25px;
+}
+
+/* INPUT */
+.group{
+  margin-bottom:16px;
+}
+
+label{
+  font-size:11px;
+  letter-spacing:1px;
+  color:var(--muted);
+  display:block;
+  margin-bottom:6px;
+}
+
+input{
+  width:100%;
+  padding:13px;
+  border-radius:10px;
+  border:1px solid #e5e7eb;
+  outline:none;
+  transition:0.2s;
+}
+
+input:focus{
+  border-color:var(--green2);
+  box-shadow:0 0 0 3px rgba(34,197,94,0.15);
+}
+
+/* PASSWORD WRAPPER */
+.wrapper{
+  position:relative;
+}
+
+.toggle{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;
+  font-size:14px;
+  color:var(--muted);
+}
+
+/* ERROR */
+.error{
+  font-size:12px;
+  color:#dc2626;
+  display:none;
+  margin-top:5px;
+}
+
+.error.show{ display:block; }
+
+/* BUTTONS */
+.actions{
+  display:flex;
+  gap:10px;
+  margin-top:20px;
+}
+
+button{
+  flex:1;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+  transition:0.2s;
+}
+
+.btn-login{
+  background:linear-gradient(135deg,var(--green2),var(--green1));
+  color:#fff;
+}
+
+.btn-login:hover{
+  transform:translateY(-1px);
+}
+
+.btn-reset{
+  background:#f3f4f6;
+}
+
+/* LOADING */
+.loading{
+  display:none;
+  font-size:13px;
+  color:var(--muted);
+  margin-top:10px;
+}
+
+/* SUCCESS */
+.success{
+  display:none;
+  text-align:center;
+}
+
+.check{
+  width:70px;
+  height:70px;
+  margin:0 auto 15px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--green2),var(--green1));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:28px;
+  box-shadow:0 10px 25px rgba(34,197,94,0.25);
+}
+
+.success h2{
+  color:var(--green1);
+  margin-bottom:6px;
+}
+
+.success p{
+  color:var(--muted);
+}
+
+.logout{
+  margin-top:20px;
+  background:#f3f4f6;
+}
+
+/* FADE */
+.fade{
+  animation:fade 0.3s ease-in-out;
+}
+
+@keyframes fade{
+  from{opacity:0; transform:translateY(10px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+@media(max-width:420px){
+  .card{ padding:25px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+  <!-- LOGIN -->
+  <div id="loginBox" class="fade">
+    <h1>CSC426 Portal</h1>
+    <small>Secure login access</small>
+
+    <div class="group">
+      <label>Username</label>
+      <input id="username" type="text" placeholder="Enter username">
+      <div class="error" id="userErr">Minimum 3 characters required</div>
+    </div>
+
+    <div class="group">
+      <label>Password</label>
+      <div class="wrapper">
+        <input id="password" type="password" placeholder="Enter password">
+        <span class="toggle" onclick="togglePw()">👁</span>
+      </div>
+      <div class="error" id="passErr">Minimum 6 characters required</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-login" onclick="login()">Login</button>
+      <button class="btn-reset" onclick="resetForm()">Reset</button>
+    </div>
+
+    <div class="loading" id="loading">Authenticating...</div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success" id="successBox">
+    <div class="check">✓</div>
+    <h2>Access Granted</h2>
+    <p>Welcome, <b id="userShow"></b></p>
+    <button class="logout" onclick="logout()">Logout</button>
+  </div>
+
+</div>
+
+<script>
+
+function togglePw(){
+  const pw = document.getElementById("password");
+  pw.type = pw.type === "password" ? "text" : "password";
+}
+
+function login(){
+  const u = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value;
+
+  let valid = true;
+
+  document.getElementById("userErr").classList.remove("show");
+  document.getElementById("passErr").classList.remove("show");
+
+  if(u.length < 3){
+    document.getElementById("userErr").classList.add("show");
+    valid = false;
+  }
+
+  if(p.length < 6){
+    document.getElementById("passErr").classList.add("show");
+    valid = false;
+  }
+
+  if(!valid) return;
+
+  document.getElementById("loading").style.display = "block";
+
+  setTimeout(()=>{
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("successBox").style.display = "block";
+    document.getElementById("successBox").classList.add("fade");
+    document.getElementById("userShow").textContent = u;
+  }, 900);
+}
+
+function resetForm(){
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
+  document.getElementById("userErr").classList.remove("show");
+  document.getElementById("passErr").classList.remove("show");
+}
+
+function logout(){
+  resetForm();
+  document.getElementById("successBox").style.display = "none";
+  document.getElementById("loginBox").style.display = "block";
+}
+
+</script>
+
+</body>
+</html>
