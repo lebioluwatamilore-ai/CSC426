@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRO — Issues Reporting Outlet | Case Portal</title>
+<style>
+  :root{
+    --ink:#1c1f2b;
+    --bg:#f5f2ea;
+    --panel:#ffffff;
+    --indigo:#2b3a67;
+    --indigo-dark:#1c2748;
+    --amber:#e0932c;
+    --rust:#b5442e;
+    --line:#dcd6c8;
+    --muted:#6a6558;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI',Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.5;
+  }
+  h1,h2,.brandname{font-family:Georgia,'Times New Roman',serif;}
+
+  .shell{display:flex;min-height:100vh;}
+
+  /* ---- Sidebar ---- */
+  .sidebar{
+    width:230px;
+    background:var(--indigo-dark);
+    color:#ece9df;
+    padding:26px 18px;
+    flex-shrink:0;
+  }
+  .sidebar .brandname{font-size:1.25rem;font-weight:700;margin:0 0 2px;color:#fff;}
+  .sidebar .tagline{font-size:.72rem;color:#b9c0d6;margin:0 0 26px;}
+  .sidebar button{
+    display:block;
+    width:100%;
+    text-align:left;
+    background:transparent;
+    border:none;
+    color:#d7dcec;
+    padding:11px 12px;
+    border-radius:8px;
+    margin-bottom:6px;
+    font-size:.88rem;
+    cursor:pointer;
+  }
+  .sidebar button.active{background:var(--amber);color:#3a2705;font-weight:700;}
+  .sidebar button:hover:not(.active){background:#2a3a63;}
+  .sidebar .who{margin-top:30px;padding-top:16px;border-top:1px solid #364066;font-size:.7rem;color:#9aa3c2;}
+
+  main{flex:1;padding:32px 36px 60px;max-width:980px;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .pagehead{margin-bottom:22px;}
+  .pagehead h1{font-size:1.5rem;margin:0 0 4px;color:var(--indigo-dark);}
+  .pagehead p{margin:0;color:var(--muted);font-size:.9rem;}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:24px;
+    margin-bottom:20px;
+  }
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:700px){.grid{grid-template-columns:1fr;} .shell{flex-direction:column;} .sidebar{width:100%;}}
+  label{display:block;font-size:.8rem;font-weight:600;margin-bottom:5px;color:var(--muted);}
+  input,select,textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;
+    font-size:.92rem;font-family:inherit;background:#fbfaf5;
+  }
+  textarea{resize:vertical;min-height:90px;}
+  .field{margin-bottom:14px;}
+  .full{grid-column:1/-1;}
+  .btn{
+    background:var(--indigo);color:#fff;border:none;padding:11px 22px;
+    border-radius:8px;font-size:.92rem;font-weight:700;cursor:pointer;
+  }
+  .btn:hover{background:var(--indigo-dark);}
+  .btn.secondary{background:transparent;color:var(--indigo);border:1px solid var(--indigo);}
+  .msg{margin-top:14px;padding:12px 14px;border-radius:8px;font-size:.85rem;display:none;}
+  .msg.ok{display:block;background:#eef1f8;color:var(--indigo-dark);border:1px solid #c6cee6;}
+
+  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .filters select{width:auto;min-width:170px;}
+
+  table{width:100%;border-collapse:collapse;font-size:.86rem;}
+  th,td{padding:10px 8px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;}
+  .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:700;}
+  .badge.open{background:#f7e0d8;color:var(--rust);}
+  .badge.progress{background:#fbecc9;color:#8a5b13;}
+  .badge.resolved{background:#dbeee0;color:#2c6b3f;}
+  select.status-select{font-size:.78rem;padding:5px 8px;}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+  @media(max-width:700px){.stats{grid-template-columns:1fr 1fr;}}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;text-align:center;}
+  .stat .num{font-size:1.7rem;font-weight:800;color:var(--indigo-dark);}
+  .stat .lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
+
+  .empty{padding:30px;text-align:center;color:var(--muted);font-size:.9rem;}
+  .id-tag{font-family:'Courier New',monospace;font-size:.75rem;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="sidebar">
+    <p class="brandname">IRO</p>
+    <p class="tagline">Issues Reporting Outlet — Case Portal</p>
+    <button data-view="submit" class="active">Open a Case</button>
+    <button data-view="status">Check Case Status</button>
+    <button data-view="officer">Case Officer</button>
+    <div class="who">
+      Prototype by<br><strong style="color:#d7dcec;">Lebi Oluwatamilore Adedeji</strong><br>400L · CSC426
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- SUBMIT VIEW -->
+    <section id="view-submit" class="view active">
+      <div class="pagehead">
+        <h1>Open a new case</h1>
+        <p>For AAUA students and indigenes of Akungba, Iwaro, Etioro and Ayegunle.</p>
+      </div>
+      <div class="card">
+        <form id="caseForm">
+          <div class="grid">
+            <div class="field">
+              <label for="fullName">Full name</label>
+              <input id="fullName" required placeholder="e.g. Kunle Adebayo">
+            </div>
+            <div class="field">
+              <label for="role">Reporting as</label>
+              <select id="role" required>
+                <option value="">Select...</option>
+                <option>Student</option>
+                <option>Indigene</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="community">Community involved</label>
+              <select id="community" required>
+                <option value="">Select...</option>
+                <option>Akungba</option>
+                <option>Iwaro</option>
+                <option>Etioro</option>
+                <option>Ayegunle</option>
+                <option>AAUA Campus</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="category">Case category</label>
+              <select id="category" required>
+                <option value="">Select...</option>
+                <option>Noise / Environmental Nuisance</option>
+                <option>Landlord-Tenant Dispute</option>
+                <option>Land / Boundary Dispute</option>
+                <option>Security Concern</option>
+                <option>Health-related</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="contact">Phone or email (optional)</label>
+              <input id="contact" placeholder="For follow-up only">
+            </div>
+            <div class="field">
+              <label for="location">Specific location</label>
+              <input id="location" placeholder="e.g. Iwaro road junction / off-campus lodge">
+            </div>
+            <div class="field full">
+              <label for="description">Describe the case</label>
+              <textarea id="description" required placeholder="What happened, when, and who was involved?"></textarea>
+            </div>
+          </div>
+          <button type="submit" class="btn">Open case</button>
+          <div class="msg ok" id="successMsg">Case opened. Your case number is <strong id="newCaseId"></strong> — keep it to check status later.</div>
+        </form>
+      </div>
+    </section>
+
+    <!-- STATUS VIEW -->
+    <section id="view-status" class="view">
+      <div class="pagehead">
+        <h1>Check a case's status</h1>
+        <p>Enter the case number you received when you opened it.</p>
+      </div>
+      <div class="card">
+        <div class="filters">
+          <input id="lookupId" placeholder="e.g. IRO-25-0001" style="max-width:260px;">
+          <button class="btn secondary" id="lookupBtn">Check status</button>
+        </div>
+        <div id="lookupResult"></div>
+      </div>
+    </section>
+
+    <!-- OFFICER VIEW -->
+    <section id="view-officer" class="view">
+      <div class="pagehead">
+        <h1>Case officer dashboard</h1>
+        <p>Review, tag and update the outcome of every open case.</p>
+      </div>
+      <div class="stats" id="statsRow"></div>
+      <div class="card">
+        <div class="filters">
+          <select id="filterStatus">
+            <option value="">All statuses</option>
+            <option>Open</option>
+            <option>In Progress</option>
+            <option>Resolved</option>
+          </select>
+          <select id="filterCategory">
+            <option value="">All categories</option>
+          </select>
+          <button class="btn secondary" id="resetData">Reset demo data</button>
+        </div>
+        <div id="tableWrap"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = "iro_cases_lebi_v1";
+
+  // ---- Model: CaseReport object ----
+  function CaseReport(data){
+    this.caseId = data.caseId;
+    this.fullName = data.fullName;
+    this.role = data.role;
+    this.community = data.community;
+    this.category = data.category;
+    this.contact = data.contact || "";
+    this.location = data.location || "";
+    this.description = data.description;
+    this.status = data.status || "Open";
+    this.dateOpened = data.dateOpened || new Date().toISOString();
+  }
+
+  function seedData(){
+    return [
+      new CaseReport({caseId:"IRO-25-0001", fullName:"Femi K.", role:"Student", community:"Iwaro", category:"Noise / Environmental Nuisance", location:"Off-campus lodge, Iwaro", description:"Late-night generator noise disturbing neighbouring households.", status:"In Progress"}),
+      new CaseReport({caseId:"IRO-25-0002", fullName:"Alhaja Fúnmi", role:"Indigene", community:"Etioro", category:"Landlord-Tenant Dispute", location:"Etioro lodge row", description:"Disagreement over rent increase and deposit refund with student tenants.", status:"Open"}),
+      new CaseReport({caseId:"IRO-25-0003", fullName:"Grace O.", role:"Student", community:"Ayegunle", category:"Land / Boundary Dispute", location:"Ayegunle-AAUA farm edge", description:"Boundary marker dispute affecting access path to lodge.", status:"Resolved"})
+    ];
+  }
+
+  function loadCases(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw){ const seeded = seedData(); saveCases(seeded); return seeded; }
+      return JSON.parse(raw).map(c => new CaseReport(c));
+    }catch(e){
+      const seeded = seedData(); saveCases(seeded); return seeded;
+    }
+  }
+  function saveCases(cases){ localStorage.setItem(STORAGE_KEY, JSON.stringify(cases)); }
+  function nextCaseId(cases){
+    const n = cases.length + 1;
+    return "IRO-25-" + String(n).padStart(4,"0");
+  }
+
+  let cases = loadCases();
+
+  // ---- Sidebar navigation ----
+  const navButtons = document.querySelectorAll(".sidebar button[data-view]");
+  navButtons.forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      navButtons.forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+      document.getElementById("view-"+btn.dataset.view).classList.add("active");
+      if(btn.dataset.view === "officer") renderOfficer();
+    });
+  });
+
+  // ---- Submit form ----
+  document.getElementById("caseForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    const caseId = nextCaseId(cases);
+    const c = new CaseReport({
+      caseId: caseId,
+      fullName: document.getElementById("fullName").value.trim(),
+      role: document.getElementById("role").value,
+      community: document.getElementById("community").value,
+      category: document.getElementById("category").value,
+      contact: document.getElementById("contact").value.trim(),
+      location: document.getElementById("location").value.trim(),
+      description: document.getElementById("description").value.trim()
+    });
+    cases.push(c);
+    saveCases(cases);
+    document.getElementById("newCaseId").textContent = caseId;
+    document.getElementById("successMsg").style.display = "block";
+    this.reset();
+  });
+
+  // ---- Status lookup ----
+  document.getElementById("lookupBtn").addEventListener("click", ()=>{
+    const val = document.getElementById("lookupId").value.trim().toUpperCase();
+    const result = document.getElementById("lookupResult");
+    const found = cases.find(c=>c.caseId.toUpperCase() === val);
+    if(!found){
+      result.innerHTML = '<div class="empty">No case found with that case number.</div>';
+      return;
+    }
+    result.innerHTML = `
+      <table>
+        <tr><th>Case number</th><td class="id-tag">${found.caseId}</td></tr>
+        <tr><th>Status</th><td>${statusBadge(found.status)}</td></tr>
+        <tr><th>Category</th><td>${found.category}</td></tr>
+        <tr><th>Community</th><td>${found.community}</td></tr>
+        <tr><th>Location</th><td>${found.location||"—"}</td></tr>
+        <tr><th>Description</th><td>${escapeHtml(found.description)}</td></tr>
+        <tr><th>Opened</th><td>${new Date(found.dateOpened).toLocaleString()}</td></tr>
+      </table>`;
+  });
+
+  // ---- Case officer view ----
+  function statusBadge(status){
+    const cls = status === "Open" ? "open" : status === "In Progress" ? "progress" : "resolved";
+    return `<span class="badge ${cls}">${status}</span>`;
+  }
+  function escapeHtml(s){ const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+  function populateCategoryFilter(){
+    const sel = document.getElementById("filterCategory");
+    const cats = [...new Set(cases.map(c=>c.category))];
+    sel.innerHTML = '<option value="">All categories</option>' + cats.map(c=>`<option>${c}</option>`).join("");
+  }
+
+  function renderOfficer(){
+    populateCategoryFilter();
+    const statusFilter = document.getElementById("filterStatus").value;
+    const catFilter = document.getElementById("filterCategory").value;
+
+    const total = cases.length;
+    const open = cases.filter(c=>c.status==="Open").length;
+    const progress = cases.filter(c=>c.status==="In Progress").length;
+    const resolved = cases.filter(c=>c.status==="Resolved").length;
+    document.getElementById("statsRow").innerHTML = `
+      <div class="stat"><div class="num">${total}</div><div class="lbl">Total Cases</div></div>
+      <div class="stat"><div class="num">${open}</div><div class="lbl">Open</div></div>
+      <div class="stat"><div class="num">${progress}</div><div class="lbl">In Progress</div></div>
+      <div class="stat"><div class="num">${resolved}</div><div class="lbl">Resolved</div></div>`;
+
+    let list = cases.slice().reverse();
+    if(statusFilter) list = list.filter(c=>c.status===statusFilter);
+    if(catFilter) list = list.filter(c=>c.category===catFilter);
+
+    const wrap = document.getElementById("tableWrap");
+    if(list.length === 0){
+      wrap.innerHTML = '<div class="empty">No cases match this filter.</div>';
+      return;
+    }
+    wrap.innerHTML = `
+      <table>
+        <thead><tr>
+          <th>Case #</th><th>Reporter</th><th>Community</th><th>Category</th><th>Description</th><th>Status</th>
+        </tr></thead>
+        <tbody>
+          ${list.map(c=>`
+            <tr>
+              <td class="id-tag">${c.caseId}</td>
+              <td>${escapeHtml(c.fullName)}<br><small style="color:var(--muted)">${c.role}</small></td>
+              <td>${c.community}</td>
+              <td>${c.category}</td>
+              <td style="max-width:220px;">${escapeHtml(c.description)}</td>
+              <td>
+                <select class="status-select" data-id="${c.caseId}">
+                  <option ${c.status==="Open"?"selected":""}>Open</option>
+                  <option ${c.status==="In Progress"?"selected":""}>In Progress</option>
+                  <option ${c.status==="Resolved"?"selected":""}>Resolved</option>
+                </select>
+              </td>
+            </tr>`).join("")}
+        </tbody>
+      </table>`;
+
+    wrap.querySelectorAll(".status-select").forEach(sel=>{
+      sel.addEventListener("change", (e)=>{
+        const id = e.target.dataset.id;
+        const c = cases.find(x=>x.caseId===id);
+        c.status = e.target.value;
+        saveCases(cases);
+        renderOfficer();
+      });
+    });
+  }
+
+  document.getElementById("filterStatus").addEventListener("change", renderOfficer);
+  document.getElementById("filterCategory").addEventListener("change", renderOfficer);
+  document.getElementById("resetData").addEventListener("click", ()=>{
+    localStorage.removeItem(STORAGE_KEY);
+    cases = loadCases();
+    renderOfficer();
+  });
+
+})();
+</script>
+</body>
+</html>
